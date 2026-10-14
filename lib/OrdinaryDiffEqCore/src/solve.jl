@@ -64,7 +64,7 @@ function _disco_problem(::Type{F}, ::Type{T}, i, u, _dt, uprev, k, cache, save_i
         nothing, zeros(Float64, 1), zeros(Float64, 1)
     end
     zero_func = zero_func_struct(u₁, i, _dt, uprev, u, k, cache, save_idxs, differential_vars, 1, out, out_low, out_high, f, tprev, p)
-    return IntervalNonlinearProblem{false}(F(zero_func), [zero(T), one(T)], SciMLBase.NullParameters())
+    return IntervalNonlinearProblem{false}(F(zero_func), [zero(one(T)), one(T)], SciMLBase.NullParameters())
 end
 
 # One problem type per callback type in the set: `maybe_discontinuity` is a run-time field, so this
@@ -1003,9 +1003,10 @@ Base.@constprop :aggressive function _ode_init(
     # rather than built, so no problem is constructed for a solve that has no use for it.
     # The zero function reads everything, `p` included, from its own state, so the
     # problem carries no parameters and its type does not depend on `p`.
+    # The bracket holds the step fraction θ, which has the unitless type of `one(tType)`.
     disco_zero_wrapper = FunctionWrapper{Float64, Tuple{Float64, SciMLBase.NullParameters}}
     disco_prob_type = Base.promote_op(
-        IntervalNonlinearProblem{false}, disco_zero_wrapper, Vector{tType},
+        IntervalNonlinearProblem{false}, disco_zero_wrapper, Vector{typeof(one(tType))},
         SciMLBase.NullParameters
     )
     # Under `FullSpecialize` the problems hold the zero function itself, typed by its callback,
